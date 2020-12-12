@@ -8,7 +8,7 @@ var app = express();
 
 app.use(express.static(path.join(__dirname, '../build')));
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'client.html'));
 });
 
 var server = new WebSocket.Server({ server: app.listen(3333) });
@@ -50,7 +50,6 @@ server.on('connection', (socket) => {
         userList.push(message);
     });
     setInterval(() => {
-        console.log(userList);
         for (var i = 0; i < activeUsers.length; i++) {
             if (activeUsers[i].user === null) {
                 if (users.length > 0) {
@@ -63,6 +62,7 @@ server.on('connection', (socket) => {
                     activeUsers[i].connection.send('{"videoUrl":' + JSON.stringify(activeUsers[i].videoUrl) + '}');
                 }
             } else if (checkTimeOut(activeUsers[i])) {
+                console.log("activeUsers[i]=>", activeUsers[i]);
                 activeUsers[i].user = null;
                 activeUserList.shift();
                 activeUsers[i].connection.send("Times Up!")

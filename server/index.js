@@ -127,7 +127,6 @@ const GetUserData = () => {
                 activeUsers[i].connection = null;
             }
         }
-
     }, 1000)
 }
 
@@ -135,7 +134,7 @@ function checkTimeOut(user) {
     if (user.connection === null) return false
     const currentTime = new Date()
     console.log(user.name + " active for - " + (currentTime - user.time))
-    console.log(currentTime - user.connection.last_heard)
+    console.log("get currentTime here =>", currentTime - user.connection.last_heard)
 
     if (currentTime - user.connection.last_heard >= 10000) {
         console.log("SOCKET IS NOT ALIVEEEE")
@@ -143,7 +142,7 @@ function checkTimeOut(user) {
     }
 
     if (currentTime - user.time >= maxTime * 1000) {
-        //console.log("Expired")
+        console.log("Expired")
         return true;
     } else {
         //console.log("not Expired")

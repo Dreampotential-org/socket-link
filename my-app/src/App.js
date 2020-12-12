@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { FormControl, Form } from "react-bootstrap";
 import ListOfActiveUsers from './Components/ListOfActiveUsers.jsx';
 import ListOfQueueUsers from './Components/ListOfQueueUsers.jsx'
 import Accordion from 'react-bootstrap/Accordion';
@@ -23,7 +24,10 @@ class App extends React.Component {
       queueUsers: null,
       showEnter: false,
       showTimesUp: false,
-      isInQueue: false
+      isInQueue: false,
+      name: "",
+      message: "",
+      getTimeSet: null
     }
   }
 
@@ -34,10 +38,11 @@ class App extends React.Component {
     }
     // Pass or get message from web socket 
     socket.onmessage = event => {
-      // console.log(`Message from server: ${event.data}`);
+      // console.log("Message from server =>", event);
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
         const allUsers = JSON.parse(event.data)
+        console.log("allUsers=>", allUsers);
         this.setState({
           users: allUsers,
           activeUsers: allUsers.activeUsers,
@@ -61,11 +66,16 @@ class App extends React.Component {
 
   //when the user decides to join the 3d verse (puts you in the world if it is not full and the queue if it is full)
   joinQueue() {
-    socket.send('playaName');
-    this.setState({
-      isInQueue: true,
-      user: 'playaName'
-    })
+    if (this.state.name.length > 0) {
+      // console.log("socket data set =>", socket);
+      socket.send(this.state.name);
+      // socket.send(this.state.message);
+      this.setState({
+        isInQueue: true,
+        user: 'playaName',
+        getTimeSet: new Date()
+      })
+    }
   }
 
   //when a user decides to leave the queue
@@ -74,6 +84,15 @@ class App extends React.Component {
   }
 
   render() {
+    const NameText = event => {
+      this.setState({ name: event.target.value });
+      event.preventDefault();
+    };
+
+    const MessageText = event => {
+      this.setState({ message: event.target.value });
+    }
+
     if (!this.state.showEnter && !this.state.showTimesUp && this.state.activeUsers != null && this.state.queueUsers != null) {
       return (
         <Accordion>
@@ -83,12 +102,28 @@ class App extends React.Component {
             </Accordion.Toggle>
             <Accordion.Collapse eventKey="1">
               <Card.Body>
+                <div>
+                  <Form.Label>Name</Form.Label>
+                  <FormControl
+                    placeholder="Name"
+                    aria-label="Name"
+                    onChange={e => NameText(e)}
+                    style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
+                  />
+                  <Form.Label>Message</Form.Label>
+                  <FormControl
+                    placeholder="Message"
+                    aria-label="Send Message"
+                    onChange={e => MessageText(e)}
+                    style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
+                  />
+                </div>
                 <div id='userLists'>
                   <ListOfActiveUsers users={this.state.activeUsers} />
                   <ListOfQueueUsers users={this.state.queueUsers} />
                 </div>
                 <div>
-                  <p><b>Number of people waiting: {this.state.queueUsers.length.toString()}</b></p>
+                  <p><b>Number of people waiting join: {this.state.queueUsers.length.toString()}</b></p>
                   <Button onClick={this.joinQueue}>Join</Button>
                 </div>
               </Card.Body>
@@ -103,7 +138,8 @@ class App extends React.Component {
             You may now enter the 3D verse!
               </Modal.Body>
           <Modal.Footer>
-            <Button variant='primary' href={this.state.videoURL} target="_blank">Enter</Button>
+            {/* <Button variant='primary' href={this.state.videoURL} target="_blank">Enter</Button> */}
+            <Button variant='primary' href={this.state.videoURL} onClick={() => { this.setState({ showEnter: false }) }} target="_blank">Enter</Button>
             <Button variant='primary' onClick={() => { this.setState({ showEnter: false }) }}>Close</Button>
           </Modal.Footer>
         </Modal.Dialog>
@@ -118,7 +154,6 @@ class App extends React.Component {
         </Modal.Dialog>
       )
     } else if (!this.state.showEnter && !this.state.showTimesUp && this.state.activeUsers != null && this.state.queueUsers != null && this.state.isInQueue) {
-      console.log(this.state.activeUsers)
       return (
         <Accordion>
           <Card>
@@ -132,7 +167,7 @@ class App extends React.Component {
                   <ListOfQueueUsers users={this.state.queueUsers} />
                 </div>
                 <div>
-                  <p><b>Number of people waiting: {this.state.queueUsers.length.toString()}</b></p>
+                  <p><b>Number of people waiting Leave: {this.state.queueUsers.length.toString()}</b></p>
                   <Button onClick={this.leaveQueue}>Leave</Button>
                 </div>
               </Card.Body>
