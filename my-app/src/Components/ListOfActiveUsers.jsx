@@ -25,11 +25,18 @@ class ListOfActiveUsers extends React.Component {
                 if (this.state.allUser[i] == user) {
                     this.state.allUser.splice(i, 1);
                     socket.onmessage = event => {
-                        const activeUsersData = JSON.parse(event.data);
-                        let ActiveSet = activeUsersData.activeUsers;
-                        console.log("event=>", ActiveSet.splice(i, 1));
+                        let activeUsersData = JSON.parse(event.data);
+                        let ActiveSet = activeUsersData.activeUsers.splice(i, 1);
+                        // console.log("activeUsersData && activeUsersData.activeUsers.length", activeUsersData && activeUsersData.activeUsers.length);
+                        if (activeUsersData && activeUsersData.activeUsers.length < 3) {
+                            let ChangeAllSet = activeUsersData.activeUsers.push(activeUsersData.users[0]);
+                            activeUsersData.users.shift();
+                        }
+                        // socket.send(activeUsersData);
+                        this.props.ExpireData(activeUsersData);
                     }
                     break;
+                    // this.props.ExpireDataHere(this.state.allUser);
                 }
             }
         }

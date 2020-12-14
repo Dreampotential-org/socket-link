@@ -43,11 +43,22 @@ const activeUsers = [{
 server.on('connection', (socket) => {
     socket.on('message', message => {
         //push users data in web socket
+        // console.log("message data here =>", message);
         users.push({
             user: message,
             connection: socket
         })
         userList.push(message);
+    });
+
+    socket.on('sendMessage', sendMessage => {
+        //push users data in web socket
+        console.log("server front end side =>", sendMessage);
+        // users.push({
+        //     user: message,
+        //     connection: socket
+        // })
+        // userList.push(message);
     });
     setInterval(() => {
         for (var i = 0; i < activeUsers.length; i++) {
@@ -79,7 +90,28 @@ server.on('connection', (socket) => {
             return false;
         }
     }
+    // socket.on("sendMessage", message => {
+    //     console.log("text get in setrver side =>", message);
+    //     // server.emit("message", (message));
+    //     server.clients.forEach(function each(client) {
+    //         if (client.readyState === WebSocket.OPEN) {
+    //             client.send(data);
+    //             console.log("data come on server client data ");
+    //         }
+    //     });
+    //     callback("Delivere");
+    // });
 });
 
-
-
+server.on('connection', (socket) => {
+    socket.on("sendMessage", message => {
+        console.log("text get in setrver side =>", message);
+        // server.emit("message", (message));
+        server.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(data);
+                console.log("data come on server client data ");
+            }
+        });
+    });
+});

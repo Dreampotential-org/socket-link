@@ -1,7 +1,7 @@
 var express = require('express');
 var WebSocket = require('ws')
 var app = express();
-var server = new WebSocket.Server({ server: app.listen(3333) });
+var server = new WebSocket.Server({ server: app.listen(3300) });
 
 app.use(express.static('client'));
 
@@ -36,11 +36,18 @@ function populate_active_users() {
 server.on('connection', (socket) => {
     socket.on('message', message => {
         var data = (JSON.parse(message))
-        console.log(data)
+        console.log("data in server file =>", data);
         if (data.alive) {
             console.log("ALIVE")
             socket.last_heard = new Date()
             return
+        }
+        if (data.input_text) {
+            socket.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(data);
+                }
+            });
         }
         if (data.enter_queue) {
             socket.last_heard = new Date()
@@ -54,6 +61,15 @@ server.on('connection', (socket) => {
             }
             socket_list.push(socket)
         }
+    });
+    socket.on('sendMessage', (data) => {
+        console.log("data come on send message", data);
+        // server.clients.forEach(function each(client) {
+        //     if (client.readyState === WebSocket.OPEN) {
+        //         console.log("send messge in server");
+        //         client.send(data);
+        //     }
+        // });
     });
 });
 
@@ -116,6 +132,8 @@ const GetUserData = () => {
                     console.log("GO live")
                     activeUsers[i].connection.send(
                         JSON.stringify({ 'command': 'go_live' }))
+                    activeUsers[i].connection.send(
+                        JSON.stringify({ 'command': 'INPUT_TEXT' }))
                 }
             }
             if (checkTimeOut(activeUsers[i])) {
@@ -149,6 +167,17 @@ function checkTimeOut(user) {
         return false;
     }
 }
+
+// server.on('connection', function connection(socket) {
+//     socket.on('sendMessage', function incoming(data) {
+//         server.clients.forEach(function each(client) {
+//             if (client.readyState === WebSocket.OPEN) {
+//                 console.log("send messge in server");
+//                 client.send(data);
+//             }
+//         });
+//     });
+// });
 
 QueueIntervalSet();
 GetUserData();
