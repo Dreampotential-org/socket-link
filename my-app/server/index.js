@@ -21,6 +21,7 @@ const users = [];
 const maxTime = 60000;
 const userList = [];
 const activeUserList = [];
+const timeStamp = [];
 const activeUsers = [{
     videoUrl: "https://en.wikipedia.org/wiki/Leprus_intermedius",
     user: null,
@@ -53,13 +54,9 @@ server.on('connection', (socket) => {
 
     socket.on('sendMessage', sendMessage => {
         //push users data in web socket
-        console.log("server front end side =>", sendMessage);
-        // users.push({
-        //     user: message,
-        //     connection: socket
-        // })
-        // userList.push(message);
+        console.log("message data here =>", sendMessage);
     });
+
     setInterval(() => {
         for (var i = 0; i < activeUsers.length; i++) {
             if (activeUsers[i].user === null) {
@@ -70,16 +67,17 @@ server.on('connection', (socket) => {
                     users.shift();
                     userList.shift();
                     activeUsers[i].time = new Date();
+                    timeStamp.push(activeUsers[0].time);
                     activeUsers[i].connection.send('{"videoUrl":' + JSON.stringify(activeUsers[i].videoUrl) + '}');
                 }
             } else if (checkTimeOut(activeUsers[i])) {
-                console.log("activeUsers[i]=>", activeUsers[i]);
+                // console.log("activeUsers[i]=>", activeUsers[i]);
                 activeUsers[i].user = null;
                 activeUserList.shift();
                 activeUsers[i].connection.send("Times Up!")
             }
         }
-        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + '}');
+        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + '}');
     }, 1000)
 
     function checkTimeOut(user) {
@@ -93,25 +91,12 @@ server.on('connection', (socket) => {
     // socket.on("sendMessage", message => {
     //     console.log("text get in setrver side =>", message);
     //     // server.emit("message", (message));
-    //     server.clients.forEach(function each(client) {
-    //         if (client.readyState === WebSocket.OPEN) {
-    //             client.send(data);
-    //             console.log("data come on server client data ");
-    //         }
-    //     });
-    //     callback("Delivere");
+    //     // server.clients.forEach(function each(client) {
+    //     //     if (client.readyState === WebSocket.OPEN) {
+    //     //         client.send(data);
+    //     //         console.log("data come on server client data ");
+    //     //     }
+    //     // });
+    //     // callback("Delivere");
     // });
-});
-
-server.on('connection', (socket) => {
-    socket.on("sendMessage", message => {
-        console.log("text get in setrver side =>", message);
-        // server.emit("message", (message));
-        server.clients.forEach(function each(client) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(data);
-                console.log("data come on server client data ");
-            }
-        });
-    });
 });

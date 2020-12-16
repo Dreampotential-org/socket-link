@@ -17,7 +17,6 @@ class ListOfActiveUsers extends React.Component {
     }
     // ListOfActiveUsers render when Listing in Active user(get used with props)
     render() {
-        // console.log("this.props.users in active user data =>", this.state.allUser);
         const handleExpire = (index, user) => {
             // console.log("click on expire button", index);
             // console.log("user length =>", this.props.users.length);

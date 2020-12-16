@@ -1,7 +1,7 @@
 var express = require('express');
 var WebSocket = require('ws')
 var app = express();
-var server = new WebSocket.Server({ server: app.listen(3300) });
+var server = new WebSocket.Server({ server: app.listen(3333) });
 
 app.use(express.static('client'));
 
@@ -37,19 +37,18 @@ server.on('connection', (socket) => {
     socket.on('message', message => {
         var data = (JSON.parse(message))
         console.log("data in server file =>", data);
+        console.log("socket id all user =>", socket.id);
         if (data.alive) {
             console.log("ALIVE")
             socket.last_heard = new Date()
             return
         }
         if (data.input_text) {
-            socket.clients.forEach(function each(client) {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(data);
-                }
-            });
+            console.log("InputData");
+            // socket.last_heard = new Date()
         }
         if (data.enter_queue) {
+            console.log('enter in queue data set');
             socket.last_heard = new Date()
             users.push(socket._user_info)
         } else {
@@ -59,11 +58,19 @@ server.on('connection', (socket) => {
                 name: data.name,
                 connection: socket
             }
-            socket_list.push(socket)
+            console.log("sockety data set here =>", socket);
+            socket_list.push(socket);
         }
+        // server.clients.forEach(function each(client) {
+        //     if (client !== ws && client.readyState === WebSocket.OPEN) {
+        //         client.send(data);
+        //     }
+        // });
     });
+    // setInterval(() => addBroadCast(socket), 1000);
     socket.on('sendMessage', (data) => {
         console.log("data come on send message", data);
+        server.emit('sendMessage', data);
         // server.clients.forEach(function each(client) {
         //     if (client.readyState === WebSocket.OPEN) {
         //         console.log("send messge in server");
@@ -111,9 +118,8 @@ const QueueIntervalSet = () => {
 const GetUserData = () => {
     setInterval(function () {
         var stats = get_queue_stats()
-
-        console.log("Users in queue " + stats.queued_users.length +
-            " active " + stats.active_users.length);
+        // console.log("Users in queue " + stats.queued_users.length +
+        //     " active " + stats.active_users.length);
         for (var i = 0; i < activeUsers.length; i++) {
             // there is an active slot
             if (activeUsers[i].user === null) {
@@ -167,6 +173,13 @@ function checkTimeOut(user) {
         return false;
     }
 }
+
+// const addBroadCast = socket => {
+//     console.log("call add brodcast data");
+//     const response = new Date();
+//     // Emitting a new message. Will be consumed by the client
+//     socket.emit("sendMessage", response);
+// };
 
 // server.on('connection', function connection(socket) {
 //     socket.on('sendMessage', function incoming(data) {

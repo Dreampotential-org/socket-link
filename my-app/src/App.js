@@ -9,7 +9,7 @@ import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
-
+// instance of websocket connection as a class property
 const socket = new WebSocket('ws://localhost:3333');
 
 class App extends React.Component {
@@ -29,16 +29,18 @@ class App extends React.Component {
       name: "",
       message: "",
       getTimeSet: null,
-      brodCastText: ""
+      brodCastText: "",
     }
   }
 
   // componentDidMount function call every time render class Component
   componentDidMount() {
     socket.onopen = () => {
+      // on connecting, do nothing but log it to the console
       console.log('connection open')
     }
-    // Pass or get message from web socket 
+
+    // listen to data sent from the websocket(ws) server
     socket.onmessage = event => {
       // console.log("Message from server =>", event);
       //if the message from the server starts with u then it has the user lists in it
@@ -48,7 +50,8 @@ class App extends React.Component {
         this.setState({
           users: allUsers,
           activeUsers: allUsers.activeUsers,
-          queueUsers: allUsers.users
+          queueUsers: allUsers.users,
+          getTimeSet: allUsers.timeStamp
         })
         //if it starts with v then it is the URL for the video endpoint
       } else if (event.data[2] === 'v') {
@@ -64,39 +67,32 @@ class App extends React.Component {
         })
       }
     }
+    socket.onerror = err => {
+      console.error(
+        "Socket encountered error: ",
+        err.message,
+        "Closing socket"
+      );
+
+      socket.close();
+    };
   };
 
   //when the user decides to join the 3d verse (puts you in the world if it is not full and the queue if it is full)
   joinQueue(data) {
-    // console.log("joint data here =>", data);
     if (data && data.activeUsers && data.users) {
-      console.log("come on main data ste ");
       this.setState({
         name: data,
-        // queueUsers: data.users
       })
     } else {
-      // socket.send(JSON.stringify({
-      //   name: this.state.name,
-      //   message: this.state.message
-      // }));
-      socket.send(this.state.name);
-      this.setState({
-        isInQueue: true,
-        user: 'playaName',
-        getTimeSet: new Date()
-      })
+      if (this.state.name.length > 0) {
+        socket.send(this.state.name);
+        this.setState({
+          isInQueue: true,
+          user: 'playaName'
+        })
+      }
     }
-    // if (this.state.name.length > 0) {
-    //   // console.log("socket data set =>", socket);
-    //   socket.send(this.state.name);
-    //   // socket.send(this.state.message);
-    //   this.setState({
-    //     isInQueue: true,
-    //     user: 'playaName',
-    //     getTimeSet: new Date()
-    //   })
-    // }
   }
 
   //when a user decides to leave the queue
@@ -104,6 +100,7 @@ class App extends React.Component {
 
   }
 
+  //user click on expire button then remove each user from the current user
   ExpireData(data) {
     console.log("click on expire data", data.activeUsers);
     data && data.activeUsers.map((dataAll) => {
@@ -111,29 +108,10 @@ class App extends React.Component {
     });
   }
 
-  addBroadCast() {
-    console.log("come on main data set here");
-    // socket.send("sendMessage", "all data pass here", (error) => {
-    //   // formInput.value = "";
-    //   // formbutton.removeAttribute("disabled");
-    //   // formInput.focus;
-    //   if (error) {
-    //     return console.log(error);
-    //   }
-    //   console.log("Message was delivred");
-    // });
-    // socket.onmessage = messageData => {
-    //   console.log("event data set here ", "uvgtybytvtfvtty", messageData);
-    // }
-    // socket.send("sendMessage", "dataset here so you get batte idea", (error) => {
-    //   // formInput.value = "";
-    //   // formbutton.removeAttribute("disabled");
-    //   // formInput.focus;
-    //   if (error) {
-    //     return console.log(error);
-    //   }
-    //   console.log("Message was delivred");
-    // });
+  sendBroadcast() {
+    console.log("click to send broadcast message");
+    // it emits the new message written by the user to the 'chat' channel
+    // socket.emit('sendMessage', "come on main data set here");
   }
 
   render() {
@@ -147,7 +125,7 @@ class App extends React.Component {
       event.preventDefault();
     }
 
-    const BrodCastText = event => {
+    const BroadCastText = event => {
       this.setState({ brodCastText: event.target.value });
       event.preventDefault();
     };
@@ -166,20 +144,20 @@ class App extends React.Component {
                   <FormControl
                     placeholder="Name"
                     aria-label="Name"
-                    onChange={e => NameText(e)}
+                    onChange={(e) => NameText(e)}
                     style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
                   />
                   <Form.Label>Message</Form.Label>
                   <FormControl
                     placeholder="Message"
                     aria-label="Send Message"
-                    onChange={e => MessageText(e)}
+                    onChange={(e) => MessageText(e)}
                     style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
                   />
                 </div>
                 <div id='userLists'>
-                  <ListOfActiveUsers users={this.state.activeUsers} ExpireData={this.joinQueue.bind()} />
-                  <ListOfQueueUsers users={this.state.queueUsers} />
+                  <ListOfActiveUsers users={this.state.activeUsers} />
+                  <ListOfQueueUsers users={this.state.queueUsers} getTimeSet={this.state.getTimeSet} />
                 </div>
                 <div>
                   <p><b>Number of people waiting join: {this.state.queueUsers.length.toString()}</b></p>
@@ -188,10 +166,10 @@ class App extends React.Component {
                   <FormControl
                     placeholder="Broadcast"
                     aria-label="Broadcast"
-                    onChange={(e) => BrodCastText(e)}
+                    onChange={(e) => BroadCastText(e)}
                     style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
                   />
-                  <Button onClick={() => this.addBroadCast()}>Send</Button>
+                  <Button id="sendMessage" onClick={this.sendBroadcast}>Send</Button>
                 </div>
               </Card.Body>
             </Accordion.Collapse>
