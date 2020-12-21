@@ -1,3 +1,4 @@
+/* global localStorage, */
 import React from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -8,6 +9,11 @@ import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
+import { localStorage } from "node-localstorage";
+//Import Socket.io
+import openSocket from 'socket.io-client';
+
+// var localStorage = new LocalStorage('./scratch');
 
 // instance of websocket connection as a class property
 const socket = new WebSocket('ws://localhost:3333');
@@ -27,6 +33,7 @@ class App extends React.Component {
       showTimesUp: false,
       isInQueue: false,
       name: "",
+      roomName: "",
       message: "",
       getTimeSet: null,
       brodCastText: "",
@@ -42,10 +49,10 @@ class App extends React.Component {
 
     // listen to data sent from the websocket(ws) server
     socket.onmessage = event => {
-      // console.log("Message from server =>", event);
+      console.log("event =>", event);
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
-        const allUsers = JSON.parse(event.data)
+        const allUsers = event.data && JSON.parse(event.data)
         // console.log("allUsers=>", allUsers);
         this.setState({
           users: allUsers,
@@ -67,13 +74,15 @@ class App extends React.Component {
         })
       }
     }
+    // if (this.state.roomName !== '') {
+    //   socket.emit('sendMessage', this.state.roomName);
+    // }
     socket.onerror = err => {
       console.error(
         "Socket encountered error: ",
         err.message,
         "Closing socket"
       );
-
       socket.close();
     };
   };
@@ -87,6 +96,10 @@ class App extends React.Component {
     } else {
       if (this.state.name.length > 0) {
         socket.send(this.state.name);
+        localStorage.setItem("room", this.state.roomName);
+        console.log("setitem data set =>", localStorage.getItem("room"));
+        socket.emit('sendMessage', this.state.roomName);
+        // this.socket.emit("message", this.state.roomName);
         this.setState({
           isInQueue: true,
           user: 'playaName'
@@ -120,6 +133,11 @@ class App extends React.Component {
       event.preventDefault();
     };
 
+    const RoomName = event => {
+      this.setState({ roomName: event.target.value });
+      event.preventDefault();
+    };
+
     const MessageText = event => {
       this.setState({ message: event.target.value });
       event.preventDefault();
@@ -140,6 +158,13 @@ class App extends React.Component {
             <Accordion.Collapse eventKey="1">
               <Card.Body>
                 <div>
+                  <Form.Label>Room Name</Form.Label>
+                  <FormControl
+                    placeholder="RoomName"
+                    aria-label="RoomName"
+                    onChange={(e) => RoomName(e)}
+                    style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
+                  />
                   <Form.Label>Name</Form.Label>
                   <FormControl
                     placeholder="Name"

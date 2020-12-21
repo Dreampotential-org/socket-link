@@ -33,6 +33,7 @@ function populate_active_users() {
     return setup_queue
 }
 
+// server and client connection at server-side
 server.on('connection', (socket) => {
     socket.on('message', message => {
         var data = (JSON.parse(message))
@@ -70,7 +71,7 @@ server.on('connection', (socket) => {
     // setInterval(() => addBroadCast(socket), 1000);
     socket.on('sendMessage', (data) => {
         console.log("data come on send message", data);
-        server.emit('sendMessage', data);
+        // server.emit('sendMessage', data);
         // server.clients.forEach(function each(client) {
         //     if (client.readyState === WebSocket.OPEN) {
         //         console.log("send messge in server");
@@ -80,6 +81,7 @@ server.on('connection', (socket) => {
     });
 });
 
+// get queue state when all current user store in active user
 function get_queue_stats() {
     var active_users = []
     var queued_users = []
@@ -101,6 +103,7 @@ function get_queue_stats() {
     }
 }
 
+// when active user interval complited then queue user call
 const QueueIntervalSet = () => {
     setInterval(function () {
         var stats = get_queue_stats()
@@ -115,6 +118,7 @@ const QueueIntervalSet = () => {
     }, 2000)
 }
 
+// get active and queue user from the client side
 const GetUserData = () => {
     setInterval(function () {
         var stats = get_queue_stats()
@@ -142,6 +146,7 @@ const GetUserData = () => {
                         JSON.stringify({ 'command': 'INPUT_TEXT' }))
                 }
             }
+            // active user time expired(every seconds time out call)
             if (checkTimeOut(activeUsers[i])) {
                 activeUsers[i].user = null;
                 console.log("GO expired")
@@ -154,6 +159,7 @@ const GetUserData = () => {
     }, 1000)
 }
 
+// check this time out when user add
 function checkTimeOut(user) {
     if (user.connection === null) return false
     const currentTime = new Date()

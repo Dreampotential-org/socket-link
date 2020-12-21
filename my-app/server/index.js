@@ -1,10 +1,9 @@
+/* global localStorage, */
 var express = require('express');
 const path = require('path');
-
-
+var localStorage = require('node-localstorage');
 var WebSocket = require('ws')
 var app = express();
-
 
 app.use(express.static(path.join(__dirname, '../build')));
 app.get('/', function (req, res) {
@@ -41,10 +40,13 @@ const activeUsers = [{
     time: null
 }];
 
+
 server.on('connection', (socket) => {
     socket.on('message', message => {
         //push users data in web socket
-        // console.log("message data here =>", message);
+        console.log("message data =>", message);
+        // var GetData = localStorage.getItem("room");
+        // console.log("message data =>", JSON.parse(GetData));
         users.push({
             user: message,
             connection: socket
@@ -55,6 +57,7 @@ server.on('connection', (socket) => {
     socket.on('sendMessage', sendMessage => {
         //push users data in web socket
         console.log("message data here =>", sendMessage);
+        socket.send("get from server data ");
     });
 
     setInterval(() => {
@@ -77,9 +80,13 @@ server.on('connection', (socket) => {
                 activeUsers[i].connection.send("Times Up!")
             }
         }
-        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + '}');
-    }, 1000)
+        let GoLive = "Go Live";
+        let CallClose = "Close Call";
+        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + ',"go_live":' + JSON.stringify(GoLive) + ',"call_close":' + JSON.stringify(CallClose) + '}');
+        // socket.emit("sendMessage", JSON.stringify(GoLive));
+    }, 2000)
 
+    // set current user timeout
     function checkTimeOut(user) {
         const currentTime = new Date()
         if (currentTime - user.time >= maxTime) {
