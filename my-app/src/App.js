@@ -44,12 +44,12 @@ class App extends React.Component {
   componentDidMount() {
     socket.onopen = () => {
       // on connecting, do nothing but log it to the console
-      console.log('connection open')
+      console.log('connection open');
     }
 
     // listen to data sent from the websocket(ws) server
     socket.onmessage = event => {
-      console.log("event =>", event);
+      // console.log("event =>", event);
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
         const allUsers = event.data && JSON.parse(event.data)
@@ -74,9 +74,7 @@ class App extends React.Component {
         })
       }
     }
-    // if (this.state.roomName !== '') {
-    //   socket.emit('sendMessage', this.state.roomName);
-    // }
+
     socket.onerror = err => {
       console.error(
         "Socket encountered error: ",
@@ -96,10 +94,10 @@ class App extends React.Component {
     } else {
       if (this.state.name.length > 0) {
         socket.send(this.state.name);
-        localStorage.setItem("room", this.state.roomName);
-        console.log("setitem data set =>", localStorage.getItem("room"));
-        socket.emit('sendMessage', this.state.roomName);
-        // this.socket.emit("message", this.state.roomName);
+        // localStorage.setItem("room", this.state.roomName);
+        // console.log("setitem data set =>", localStorage.getItem("room"));
+        // Emit "sendMessage" event
+        // socket.emit('sendMessage', this.state.roomName, "Pass Message");
         this.setState({
           isInQueue: true,
           user: 'playaName'

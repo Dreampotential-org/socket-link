@@ -2,7 +2,7 @@
 var express = require('express');
 const path = require('path');
 var localStorage = require('node-localstorage');
-var WebSocket = require('ws')
+var WebSocket = require('ws');
 var app = express();
 
 app.use(express.static(path.join(__dirname, '../build')));
@@ -54,13 +54,24 @@ server.on('connection', (socket) => {
         userList.push(message);
     });
 
-    socket.on('sendMessage', sendMessage => {
-        //push users data in web socket
-        console.log("message data here =>", sendMessage);
-        socket.send("get from server data ");
+    socket.on('sendMessage', function (from, msg) {
+        console.log(`Received message from ${from}: ${msg}`);
     });
+    socket.emit("sendMessage", "my_name", "This is a test message");
+
+    // Add "msg" event handler
+    // socket.on("msg", function (from, msg) {
+    //     console.log(`Received message from ${from}: ${msg}`);
+    // });
+    // Emit "msg" event
+    // socket.emit("msg", "my_name", "This is a test message");
+    // socket.emit("sendMessage", "my_name", "This is a test message");
 
     setInterval(() => {
+        let GoLive = "Go Live";
+        let CallClose = "Close Call";
+        let expiredActive = "expiredActive";
+        let expiredQueue = "expiredQueue";
         for (var i = 0; i < activeUsers.length; i++) {
             if (activeUsers[i].user === null) {
                 if (users.length > 0) {
@@ -80,9 +91,7 @@ server.on('connection', (socket) => {
                 activeUsers[i].connection.send("Times Up!")
             }
         }
-        let GoLive = "Go Live";
-        let CallClose = "Close Call";
-        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + ',"go_live":' + JSON.stringify(GoLive) + ',"call_close":' + JSON.stringify(CallClose) + '}');
+        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + ',"go_live":' + JSON.stringify(GoLive) + ',"call_close":' + JSON.stringify(CallClose) + ',"expired_Active":' + JSON.stringify(expiredActive) + ',"expired_Queue":' + JSON.stringify(expiredQueue) + '}');
         // socket.emit("sendMessage", JSON.stringify(GoLive));
     }, 2000)
 

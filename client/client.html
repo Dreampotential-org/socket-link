@@ -48,12 +48,11 @@
       }
     });
 
-    socket.emit("sendMessage", { message: 'Hey, I have an important message!' });
-    // socket.addEventListener('sendMessage', event => {
-    //   console.log("event data in send message", event);
-    //   var data = JSON.parse(event.data);
-    //   console.log("data=>", data)
-    // });
+    socket.addEventListener('sendMessage', event => {
+      console.log("event data in send message", event);
+      // var data = JSON.parse(event.data);
+      // console.log("data=>" , data)
+    });
 
   </script>
 </body>

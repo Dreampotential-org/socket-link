@@ -68,17 +68,22 @@ server.on('connection', (socket) => {
         //     }
         // });
     });
-    // setInterval(() => addBroadCast(socket), 1000);
-    socket.on('sendMessage', (data) => {
-        console.log("data come on send message", data);
-        // server.emit('sendMessage', data);
-        // server.clients.forEach(function each(client) {
-        //     if (client.readyState === WebSocket.OPEN) {
-        //         console.log("send messge in server");
-        //         client.send(data);
-        //     }
+    
+    socket.on('sendMessage', function(from, msg) {
+        console.log(`Received message from ${from}: ${msg}`);
+        // Relay message to all clients
+        // socket.forEach((socket) => {
+        //     socket.emit("sendMessage", from, msg);
         // });
     });
+    // socket.on("msg", function (from, msg) {
+    //     // `this` refers to the WebSocketWrapper instance
+    //     console.log(`Received message from ${from}: ${msg}`);
+    //     // Relay message to all clients
+    //     sockets.forEach((socket) => {
+    //         socket.emit("msg", from, msg);
+    //     });
+    // });
 });
 
 // get queue state when all current user store in active user
