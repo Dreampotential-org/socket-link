@@ -12,8 +12,6 @@ app.get('/', function (req, res) {
 
 var server = new WebSocket.Server({ server: app.listen(3333) });
 
-// app.use(express.static('public'));
-
 console.log('socket server is running on port 3333');
 
 const users = [];
@@ -40,32 +38,19 @@ const activeUsers = [{
     time: null
 }];
 
-
+let RoomName = "";
 server.on('connection', (socket) => {
     socket.on('message', message => {
         //push users data in web socket
-        console.log("message data =>", message);
-        // var GetData = localStorage.getItem("room");
-        // console.log("message data =>", JSON.parse(GetData));
+        // console.log("message data =>", JSON.stringify(JSON.parse(message).roomName));
+        let NewSetMessage = JSON.stringify(JSON.parse(message).name).replace(/"/g, '');
+        RoomName = JSON.stringify(JSON.parse(message).roomName).replace(/"/g, '');
         users.push({
-            user: message,
+            user: NewSetMessage,
             connection: socket
         })
-        userList.push(message);
+        userList.push(NewSetMessage);
     });
-
-    socket.on('sendMessage', function (from, msg) {
-        console.log(`Received message from ${from}: ${msg}`);
-    });
-    socket.emit("sendMessage", "my_name", "This is a test message");
-
-    // Add "msg" event handler
-    // socket.on("msg", function (from, msg) {
-    //     console.log(`Received message from ${from}: ${msg}`);
-    // });
-    // Emit "msg" event
-    // socket.emit("msg", "my_name", "This is a test message");
-    // socket.emit("sendMessage", "my_name", "This is a test message");
 
     setInterval(() => {
         let GoLive = "Go Live";
@@ -85,14 +70,24 @@ server.on('connection', (socket) => {
                     activeUsers[i].connection.send('{"videoUrl":' + JSON.stringify(activeUsers[i].videoUrl) + '}');
                 }
             } else if (checkTimeOut(activeUsers[i])) {
-                // console.log("activeUsers[i]=>", activeUsers[i]);
+                // console.log("data time up set here =>", (maxTime * 1000) - (new Date() - activeUsers[i].time));
                 activeUsers[i].user = null;
                 activeUserList.shift();
                 activeUsers[i].connection.send("Times Up!")
             }
         }
-        socket.send('{ "users":' + JSON.stringify(userList) + ',"activeUsers":' + JSON.stringify(activeUserList) + ',"timeStamp":' + JSON.stringify(timeStamp) + ',"go_live":' + JSON.stringify(GoLive) + ',"call_close":' + JSON.stringify(CallClose) + ',"expired_Active":' + JSON.stringify(expiredActive) + ',"expired_Queue":' + JSON.stringify(expiredQueue) + '}');
-        // socket.emit("sendMessage", JSON.stringify(GoLive));
+        socket.send('{ "users":' + JSON.stringify(userList) +
+            ',"activeUsers":' + JSON.stringify(activeUserList) +
+            ',"timeStamp":' + JSON.stringify(timeStamp) +
+            ',"go_live":' + JSON.stringify(GoLive) +
+            ',"call_close":' + JSON.stringify(CallClose) +
+            ',"expired_Active":' + JSON.stringify(expiredActive) +
+            ',"expired_Queue":' + JSON.stringify(expiredQueue) +
+            ',"roomName":' + JSON.stringify(RoomName)
+            + '}');
+        // if (RoomName.length > 0) {
+        //     socket.send('{"roomName":' + JSON.stringify(RoomName) + '} ')
+        // }
     }, 2000)
 
     // set current user timeout
@@ -104,15 +99,4 @@ server.on('connection', (socket) => {
             return false;
         }
     }
-    // socket.on("sendMessage", message => {
-    //     console.log("text get in setrver side =>", message);
-    //     // server.emit("message", (message));
-    //     // server.clients.forEach(function each(client) {
-    //     //     if (client.readyState === WebSocket.OPEN) {
-    //     //         client.send(data);
-    //     //         console.log("data come on server client data ");
-    //     //     }
-    //     // });
-    //     // callback("Delivere");
-    // });
 });

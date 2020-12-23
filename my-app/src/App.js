@@ -34,7 +34,7 @@ class App extends React.Component {
       isInQueue: false,
       name: "",
       roomName: "",
-      message: "",
+      userMessage: "",
       getTimeSet: null,
       brodCastText: "",
     }
@@ -53,13 +53,22 @@ class App extends React.Component {
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
         const allUsers = event.data && JSON.parse(event.data)
-        // console.log("allUsers=>", allUsers);
-        this.setState({
-          users: allUsers,
-          activeUsers: allUsers.activeUsers,
-          queueUsers: allUsers.users,
-          getTimeSet: allUsers.timeStamp
-        })
+        if (allUsers.activeUsers && allUsers.activeUsers.length == 3) {
+          console.log("come on active data ste ");
+          this.setState({
+            users: allUsers,
+            activeUsers: allUsers.activeUsers,
+            queueUsers: allUsers.users,
+            getTimeSet: allUsers.timeStamp
+          })
+        } else {
+          this.setState({
+            users: allUsers,
+            activeUsers: allUsers.activeUsers,
+            queueUsers: allUsers.users,
+            getTimeSet: allUsers.timeStamp
+          })
+        }
         //if it starts with v then it is the URL for the video endpoint
       } else if (event.data[2] === 'v') {
         const url = JSON.parse(event.data)
@@ -93,14 +102,11 @@ class App extends React.Component {
       })
     } else {
       if (this.state.name.length > 0) {
-        socket.send(this.state.name);
-        // localStorage.setItem("room", this.state.roomName);
-        // console.log("setitem data set =>", localStorage.getItem("room"));
-        // Emit "sendMessage" event
-        // socket.emit('sendMessage', this.state.roomName, "Pass Message");
+        let MainData = { "name": this.state.name, "userMessage": this.state.userMessage, "roomName": this.state.roomName };
+        socket.send(JSON.stringify(MainData));
         this.setState({
           isInQueue: true,
-          user: 'playaName'
+          user: 'playaName',
         })
       }
     }
@@ -113,7 +119,6 @@ class App extends React.Component {
 
   //user click on expire button then remove each user from the current user
   ExpireData(data) {
-    console.log("click on expire data", data.activeUsers);
     data && data.activeUsers.map((dataAll) => {
       socket.send(dataAll);
     });
@@ -137,7 +142,7 @@ class App extends React.Component {
     };
 
     const MessageText = event => {
-      this.setState({ message: event.target.value });
+      this.setState({ userMessage: event.target.value });
       event.preventDefault();
     }
 
@@ -162,6 +167,7 @@ class App extends React.Component {
                     aria-label="RoomName"
                     onChange={(e) => RoomName(e)}
                     style={{ marginBottom: "10px", marginTop: "10px", width: "8%" }}
+                    defaultValue={this.state.roomName}
                   />
                   <Form.Label>Name</Form.Label>
                   <FormControl
@@ -179,7 +185,7 @@ class App extends React.Component {
                   />
                 </div>
                 <div id='userLists'>
-                  <ListOfActiveUsers users={this.state.activeUsers} />
+                  <ListOfActiveUsers users={this.state.activeUsers} usertextMessage={this.state.userMessage} />
                   <ListOfQueueUsers users={this.state.queueUsers} getTimeSet={this.state.getTimeSet} />
                 </div>
                 <div>

@@ -68,8 +68,8 @@ server.on('connection', (socket) => {
         //     }
         // });
     });
-    
-    socket.on('sendMessage', function(from, msg) {
+
+    socket.on('sendMessage', function (from, msg) {
         console.log(`Received message from ${from}: ${msg}`);
         // Relay message to all clients
         // socket.forEach((socket) => {
@@ -91,7 +91,7 @@ function get_queue_stats() {
     var active_users = []
     var queued_users = []
     for (var user of users) {
-        queued_users.push({ 'name': user.name, 'pic': user.pic })
+        queued_users.push({ 'name': user.name, 'pic': user.pic, 'time_left': (maxTime * 1000) - (new Date() - activeUsers[i].time) })
     }
     for (var i = 0; i < activeUsers.length; i++) {
         if (activeUsers[i].user != null) {
@@ -126,7 +126,7 @@ const QueueIntervalSet = () => {
 // get active and queue user from the client side
 const GetUserData = () => {
     setInterval(function () {
-        var stats = get_queue_stats()
+        var stats = get_queue_stats();
         // console.log("Users in queue " + stats.queued_users.length +
         //     " active " + stats.active_users.length);
         for (var i = 0; i < activeUsers.length; i++) {
@@ -184,24 +184,6 @@ function checkTimeOut(user) {
         return false;
     }
 }
-
-// const addBroadCast = socket => {
-//     console.log("call add brodcast data");
-//     const response = new Date();
-//     // Emitting a new message. Will be consumed by the client
-//     socket.emit("sendMessage", response);
-// };
-
-// server.on('connection', function connection(socket) {
-//     socket.on('sendMessage', function incoming(data) {
-//         server.clients.forEach(function each(client) {
-//             if (client.readyState === WebSocket.OPEN) {
-//                 console.log("send messge in server");
-//                 client.send(data);
-//             }
-//         });
-//     });
-// });
 
 QueueIntervalSet();
 GetUserData();
