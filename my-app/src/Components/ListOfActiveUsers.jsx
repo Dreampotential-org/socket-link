@@ -14,7 +14,7 @@ class ListOfActiveUsers extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ allUser: this.props.users, userMessage: this.state.usertextMessage })
+        this.setState({ allUser: this.props.users, userMessage: this.props.usertextMessage })
     }
     // ListOfActiveUsers render when Listing in Active user(get used with props)
     render() {

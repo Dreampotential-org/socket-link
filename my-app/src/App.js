@@ -32,11 +32,12 @@ class App extends React.Component {
       showEnter: false,
       showTimesUp: false,
       isInQueue: false,
-      name: "",
-      roomName: "",
-      userMessage: "",
+      name: null,
+      roomName: null,
+      userMessage: null,
       getTimeSet: null,
-      brodCastText: "",
+      brodCastText: null,
+      userMessageQueue: ""
     }
   }
 
@@ -49,12 +50,11 @@ class App extends React.Component {
 
     // listen to data sent from the websocket(ws) server
     socket.onmessage = event => {
-      // console.log("event =>", event);
+      console.log("event =>", event);
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
         const allUsers = event.data && JSON.parse(event.data)
         if (allUsers.activeUsers && allUsers.activeUsers.length == 3) {
-          console.log("come on active data ste ");
           this.setState({
             users: allUsers,
             activeUsers: allUsers.activeUsers,
@@ -107,6 +107,7 @@ class App extends React.Component {
         this.setState({
           isInQueue: true,
           user: 'playaName',
+          userMessageQueue: this.state.userMessage
         })
       }
     }

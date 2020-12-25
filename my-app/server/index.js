@@ -39,12 +39,13 @@ const activeUsers = [{
 }];
 
 let RoomName = "";
+let ActiveUserMessage = "";
 server.on('connection', (socket) => {
     socket.on('message', message => {
         //push users data in web socket
-        // console.log("message data =>", JSON.stringify(JSON.parse(message).roomName));
         let NewSetMessage = JSON.stringify(JSON.parse(message).name).replace(/"/g, '');
         RoomName = JSON.stringify(JSON.parse(message).roomName).replace(/"/g, '');
+        ActiveUserMessage = JSON.stringify(JSON.parse(message).userMessage).replace(/"/g, '');
         users.push({
             user: NewSetMessage,
             connection: socket
@@ -70,7 +71,6 @@ server.on('connection', (socket) => {
                     activeUsers[i].connection.send('{"videoUrl":' + JSON.stringify(activeUsers[i].videoUrl) + '}');
                 }
             } else if (checkTimeOut(activeUsers[i])) {
-                // console.log("data time up set here =>", (maxTime * 1000) - (new Date() - activeUsers[i].time));
                 activeUsers[i].user = null;
                 activeUserList.shift();
                 activeUsers[i].connection.send("Times Up!")
@@ -83,11 +83,9 @@ server.on('connection', (socket) => {
             ',"call_close":' + JSON.stringify(CallClose) +
             ',"expired_Active":' + JSON.stringify(expiredActive) +
             ',"expired_Queue":' + JSON.stringify(expiredQueue) +
+            ',"User_message":' + JSON.stringify(ActiveUserMessage) +
             ',"roomName":' + JSON.stringify(RoomName)
             + '}');
-        // if (RoomName.length > 0) {
-        //     socket.send('{"roomName":' + JSON.stringify(RoomName) + '} ')
-        // }
     }, 2000)
 
     // set current user timeout
