@@ -5,4 +5,4 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 8080
-CMD [ "node", "server/index.js" ]
+CMD [ "node", "my-app/server/index.js" ]
