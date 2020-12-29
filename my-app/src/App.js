@@ -9,14 +9,9 @@ import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { localStorage } from "node-localstorage";
-//Import Socket.io
-import openSocket from 'socket.io-client';
-
-// var localStorage = new LocalStorage('./scratch');
 
 // instance of websocket connection as a class property
-const socket = new WebSocket('ws://localhost:3333');
+const socket = new WebSocket('wss://socket-link.dreamstate-4-all.org');
 
 class App extends React.Component {
   constructor(props) {
@@ -50,7 +45,7 @@ class App extends React.Component {
 
     // listen to data sent from the websocket(ws) server
     socket.onmessage = event => {
-      console.log("event =>", event);
+      // console.log("event =>", event);
       //if the message from the server starts with u then it has the user lists in it
       if (event.data[3] === 'u') {
         const allUsers = event.data && JSON.parse(event.data)

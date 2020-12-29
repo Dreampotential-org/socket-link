@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import ActiveUser from './ActiveUser.jsx';
-const socket = new WebSocket('ws://localhost:3333');
+const socket = new WebSocket('wss://socket-link.dreamstate-4-all.org');
 
 class ListOfActiveUsers extends React.Component {
     constructor(props) {

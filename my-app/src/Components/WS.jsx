@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-const socket = new WebSocket('ws://localhost:3333');
+// const socket = new WebSocket('ws://localhost:3333');
+const socket = new WebSocket('wss://socket-link.dreamstate-4-all.org');
 
 class WS extends React.Component {
     constructor(props) {

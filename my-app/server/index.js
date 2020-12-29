@@ -1,7 +1,6 @@
 /* global localStorage, */
 var express = require('express');
 const path = require('path');
-var localStorage = require('node-localstorage');
 var WebSocket = require('ws');
 var app = express();
 
