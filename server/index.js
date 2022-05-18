@@ -39,22 +39,23 @@ server.on('connection', (socket) => {
         var data = (JSON.parse(message))
         console.log("data in server file =>", data);
         console.log("socket id all user =>", socket.id);
+
+        // keep track of who we have heard from
         if (data.alive) {
             console.log("ALIVE")
             socket.last_heard = new Date()
             return
         }
-        if (data.input_text) {
-            console.log("InputData");
-            // socket.last_heard = new Date()
-        }
-        if (data.enter_queue) {
+        if (data.action_join_conferance) {
             console.log('enter in queue data set');
             socket.last_heard = new Date()
+            // XXX check if user is already part of queue list.
             users.push(socket._user_info)
-        } else {
+
+        } if (data.action_login) {
+            // login event we clean about client
             socket._user_info = {
-                user: data.name,
+                user: data.username,
                 pic: data.pic,
                 name: data.name,
                 connection: socket
