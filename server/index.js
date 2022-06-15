@@ -1,213 +1,151 @@
-var express = require("express");
-var WebSocket = require("ws");
-var app = express();
-var server = new WebSocket.Server({ server: app.listen(3333) });
-
-app.use(express.static("client"));
-
-console.log("socket server is running on port 3333");
-
-var users = [];
-var queue_slots = [];
-
-// time in seconds
-const maxTime = 1200;
-const userList = [];
-const activeUserList = [];
-var socket_list = [];
-var queue_slots = 20;
-var activeUsers = populate_active_users();
-
-function populate_active_users() {
-  var setup_queue = [];
-  for (var i = 0; i < queue_slots; i++) {
-    setup_queue.push({
-      videoUrl: "placeholder1",
-      user: null,
-      name: null,
-      pic: null,
-      connection: null,
-      time: null,
-    });
-  }
-  return setup_queue;
-}
-
-// server and client connection at server-side
-server.on("connection", (socket) => {
-  socket.id = +new Date() + "sds5000";
-  console.log("New Socket Id " + socket.id);
-  socket.on("message", (message) => {
-    var data = JSON.parse(message);
-    console.log("data in server file =>", data);
-    console.log("socket id all user =>", socket.id);
-    // keep track of who we have heard from
-    if (data.alive) {
-      console.log("ALIVE");
-      socket.last_heard = new Date();
-      return;
-    }
-
-    if (data.action_login) {
-      // login event we clean about client
-      console.log("login event", data.username);
-      socket._user_info = {
-        user: data.username,
-        pic: data.pic,
-        name: data.name,
-        connection: socket,
-        time: +new Date(),
-      };
-      //   console.log("sockety data set here =>", socket);
-      socket_list.push(socket);
-    }
-
-    let dataValues = Object.values(data);
-    let dataKeys = Object.keys(data);
-    if (dataKeys[0] === "action_join_conference" && dataValues[0] === true) {
-      console.log("enter in queue data set");
-      socket.last_heard = new Date();
-      // XXX check if user is already part of queue list.
-      //   console.log(socket._user_info);
-      users.push(socket._user_info);
-    }
-
-    // server.clients.forEach(function each(client) {
-    //     if (client !== ws && client.readyState === WebSocket.OPEN) {
-    //         client.send(data);
-    //     }
-    // });
-  });
-
-  socket.on("sendMessage", function (from, msg) {
-    console.log(`Received message from ${from}: ${msg}`);
-    // Relay message to all clients
-    // socket.forEach((socket) => {
-    //     socket.emit("sendMessage", from, msg);
-    // });
-  });
-  // socket.on("msg", function (from, msg) {
-  //     // `this` refers to the WebSocketWrapper instance
-  //     console.log(`Received message from ${from}: ${msg}`);
-  //     // Relay message to all clients
-  //     sockets.forEach((socket) => {
-  //         socket.emit("msg", from, msg);
-  //     });
-  // });
+import { Server } from "socket.io";
+import express from "express";
+import cors from "cors";
+const app = express();
+const maxTime = 100000; //10 Seconds
+const maxSlots = 4;
+let sockets = [];
+let availableRooms = [];
+let aliveUsers = [];
+let queueUsers = [];
+let slots = 0;
+app.use(cors());
+app.use(express.json());
+const server = app.listen(4000, () => {
+  console.log("Server is up & running *4000");
+});
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
 });
 
-// get queue state when all current user store in active user
-function get_queue_stats() {
-  var active_users = [];
-  var queued_users = [];
-  for (var user of users) {
-    // console.log("Active User", user);
-    queued_users.push({
-      name: user.name,
-      pic: user.pic,
-      time_left: maxTime * 1000 - (new Date() - user.time),
+io.on("connection", (socket) => {
+  console.log("a user connected", socket.id);
+  const entryTime = +new Date(Date.now());
+  const exitTime = +new Date(Date.now()) + maxTime;
+  // sockets.push({ id: socket.id, socket, entryTime, exitTime });
+  // if (aliveUsers.length < maxSlots) {
+  //   aliveUsers.push({ id: socket.id, socket, entryTime, exitTime });
+  // } else {
+  //   queueUsers.push({ id: socket.id, socket, entryTime, exitTime });
+  // }
+  socket.on("saveName", (name) => {
+    socket.data = { name };
+  });
+  socket.on("disconnect", () => {
+    // console.log("user disconnected", socket.id);
+    // aliveUsers = aliveUsers.filter(function (obj) {
+    //   return obj.id !== socket.id;
+    // });
+    // queueUsers = queueUsers.filter(function (obj) {
+    //   return obj.id !== socket.id;
+    // });
+    // availableRooms = availableRooms.filter(function (obj) {
+    //   return obj.id !== socket.id;
+    // });
+  });
+
+  sockets.push({ id: socket.id, socket, entryTime, exitTime });
+  socket.on("createConference", (data) => {
+    socket.data.entryTime = +new Date(Date.now());
+    console.log(data);
+    socket.data.exitTime = +new Date(Date.now()) + data.timeLimit;
+    socket.join(data.conferenceName);
+    if (!availableRooms.find((room) => room.room === data.conferenceName))
+      availableRooms.push({ id: socket.id, room: data.conferenceName });
+  });
+  socket.on("joinRoom", async (data) => {
+    let roomLength = await io.in(data.room).fetchSockets();
+    if (roomLength && roomLength.length < maxSlots) {
+      socket.data.entryTime = +new Date(Date.now());
+      socket.data.exitTime = +new Date(Date.now()) + data.timeLimit;
+      socket.join(data.room);
+    } else {
+      queueUsers.push({ id: socket.id, socket });
+    }
+    console.log("Socket Data", socket);
+  });
+
+  socket.on("leaveRoom", (room) => {
+    socket.leave(room);
+  });
+});
+
+setInterval(async () => {
+  // console.log("sockets", io.sockets.adapter.rooms);
+  // sockets.map((socket) => {
+  //   socket.socket.emit("rooms", availableRooms);
+  // });
+  // console.log(
+  //   availableRooms.map(async (room) => {
+  //     return {
+  //       room: room.room,
+  //       people: io.sockets.adapter.rooms.get(room.room).length,
+  //     };
+  //   })
+  // );
+
+  const rooms = [];
+  for (let room of availableRooms) {
+    // rooms.push({
+    let room1 = room.room;
+    let people = await io.in(room.room).fetchSockets();
+    const currentTime = +new Date(Date.now());
+
+    people = people.map((socket) => {
+      // console.log(socket.entryTime);
+      socket.data.timeLeft = socket.data.exitTime - currentTime;
+      return socket.data;
     });
+    // });
+    // console.log(people);
+    rooms.push({ room: room1, people: people });
   }
-  for (var i = 0; i < activeUsers.length; i++) {
-    if (activeUsers[i].user != null) {
-      active_users.push({
-        name: activeUsers[i].name,
-        time_left: maxTime * 1000 - (new Date() - activeUsers[i].time),
-        pic: activeUsers[i].pic,
-      });
-    }
-  }
-  return {
-    queued_users: queued_users,
-    active_users: active_users,
-  };
-}
+  console.log(rooms);
+  // console.log(rooms);
+  io.sockets.emit("rooms", rooms);
+  // availableRooms.map(({ room }) => {
+  //   io.sockets.emit("peopleInRooms", {
+  //     room,
+  //     people: io.sockets.adapter.rooms[room].length,
+  //   });
+  // });
+}, 1000);
 
-// when active user interval complited then queue user call
-const QueueIntervalSet = () => {
-  setInterval(function () {
-    // console.log(socket_list.length);
-    var stats = get_queue_stats();
-    console.log("Active Users", stats.active_users.length);
+// setInterval(() => {
+//   // console.log("Current Users", sockets.length);
+//   const currentTime = +new Date(Date.now());
+//   const removeSockets = aliveUsers.filter((socket) => {
+//     console.log(currentTime, socket.exitTime);
+//     return currentTime > socket.exitTime;
+//   });
+//   if (removeSockets.length) {
+//     removeSockets.forEach((socket, index) => {
+//       // console.log("Time Over", socket.id);
+//       aliveUsers = aliveUsers.filter(function (obj) {
+//         return obj.id !== socket.id;
+//       });
+//       if (queueUsers[0]) {
+//         aliveUsers.push(queueUsers[0]), queueUsers.shift();
+//       }
+//       socket.socket.disconnect();
 
-    for (var sock of socket_list) {
-      sock.send(
-        JSON.stringify({
-          command: "queue_info",
-          active_users: JSON.stringify(stats.active_users),
-          queued_users: JSON.stringify(stats.queued_users),
-        })
-      );
-    }
-  }, 3000);
-};
+//       // }
+//     });
+//   }
+//   console.log(aliveUsers.length);
+//   aliveUsers.forEach((socket) => {
+//     socket.socket.emit("alive", aliveUsers.length);
+//     socket.socket.emit("queue", queueUsers.length);
+//     socket.socket.emit("currentState", "You're alive");
+//   });
+//   queueUsers.forEach((socket, index) => {
+//     socket.socket.emit("alive", aliveUsers.length);
+//     socket.socket.emit("queue", queueUsers.length);
+//     socket.socket.emit("currentState", `You're in queue ${index + 1}`);
+//   });
+// }, 1000);
 
-// get active and queue user from the client side
-const GetUserData = () => {
-  setInterval(function () {
-    var stats = get_queue_stats();
-    // console.log("Users in queue " + stats.queued_users.length +
-    //     " active " + stats.active_users.length);
-    for (var i = 0; i < users.length; i++) {
-      // there is an active slot
-      if (activeUsers[i].user === null) {
-        if (!users[i]) continue;
-        if (users.length > 0) {
-          // copy user into active_users
-          activeUsers[i].user = users[i].user;
-          activeUsers[i].name = users[i].name;
-          activeUsers[i].pic = users[i].pic;
-          activeUserList.push(userList[i]);
-          activeUsers[i].connection = users[i].connection;
-
-          // remove user
-          users.shift();
-
-          activeUsers[i].time = new Date();
-          console.log("GO live");
-          activeUsers[i].connection.send(
-            JSON.stringify({ command: "go_live" })
-          );
-          activeUsers[i].connection.send(
-            JSON.stringify({ command: "INPUT_TEXT" })
-          );
-        }
-      }
-      // active user time expired(every seconds time out call)
-      if (checkTimeOut(activeUsers[i])) {
-        activeUsers[i].user = null;
-        console.log("GO expired");
-        //activeUserList.shift();
-        activeUsers[i].connection.send(JSON.stringify({ command: "expired" }));
-        activeUsers[i].connection = null;
-      }
-    }
-  }, 1000);
-};
-
-// check this time out when user add
-function checkTimeOut(user) {
-  if (user.connection === null) return false;
-  const currentTime = new Date();
-  console.log(user.name + " active for - " + (currentTime - user.time));
-  console.log(
-    "get currentTime here =>",
-    currentTime - user.connection.last_heard
-  );
-
-  if (currentTime - user.connection.last_heard >= 10000) {
-    console.log("SOCKET IS NOT ALIVEEEE");
-    return true;
-  }
-
-  if (currentTime - user.time >= maxTime * 1000) {
-    console.log("Expired");
-    return true;
-  } else {
-    //console.log("not Expired")
-    return false;
-  }
-}
-
-QueueIntervalSet();
-GetUserData();
+// Basic Input
+// Broadcast
