@@ -11,7 +11,7 @@ export default function Home() {
   const [timeLimit, setTimeLimit] = useState("");
   const [name, setName] = useState("");
   useEffect(() => {
-    socket = io.connect("http://localhost:4000");
+    socket = io.connect("https://socket-link.dreampotential.org");
     // socket.on("connect", () => );
     socket.on("alive", (data) => setAliveUsers(data));
     socket.on("queue", (data) => setQueueUsers(data));
