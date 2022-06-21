@@ -12,8 +12,8 @@ services:
         restart: always
         ports:
            - '80:3000'
-        links:
-            - "server"
+#        links:
+#            - "server"
         depends_on:
           - "server"
         networks:
@@ -30,8 +30,6 @@ services:
             args: 
                 DIR_APP: ./server
         restart: always
-        links:
-          - "client"
         networks: 
             - net
 
