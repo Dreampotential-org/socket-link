@@ -9,10 +9,10 @@ export default function Home() {
   const [conferenceName, setConferencename] = useState("");
   const [availableRooms, setAvailableRooms] = useState([]);
   const [timeLimit, setTimeLimit] = useState("");
+  const [slots, setSlots] = useState("");
   const [name, setName] = useState("");
   useEffect(() => {
     socket = io.connect("http://localhost:4000");
-    // socket.on("connect", () => );
     socket.on("alive", (data) => setAliveUsers(data));
     socket.on("queue", (data) => setQueueUsers(data));
     socket.on("currentState", (data) => setCurrentState(data));
@@ -21,7 +21,11 @@ export default function Home() {
       setQueueUsers("Disconnected");
     });
     socket.on("rooms", (data) => {
-      console.log(data);
+      data.forEach((room) => {
+        room.people.forEach((person) => {
+          if (Number(person.timeLeft) <= 0) leaveRoom(room.room);
+        });
+      });
       setAvailableRooms(data);
     });
     socket.o;
@@ -31,12 +35,12 @@ export default function Home() {
     socket.emit("createConference", {
       conferenceName,
       timeLimit,
+      slots,
     });
   };
   const joinRoom = (room) => {
     socket.emit("joinRoom", {
       room,
-      timeLimit,
     });
   };
   const saveName = () => {
@@ -45,14 +49,9 @@ export default function Home() {
   const leaveRoom = (room) => {
     socket.emit("leaveRoom", room);
   };
+
   return (
     <div>
-      {/* <h1>Alive Users</h1>
-      <h2>{aliveUsers}</h2>
-      <h1>Queue Users</h1>
-      <h2>{queueUsers}</h2>
-      <h1>Your Current State</h1>
-      <h2>{currentState}</h2> */}
       <h1>Please Enter your name</h1>
       <input
         type="text"
@@ -62,10 +61,14 @@ export default function Home() {
       <button onClick={() => saveName()}>Save Name</button>
       <h1>
         <input
-          onChange={(e) => setTimeLimit(e.target.value * 10000)}
+          onChange={(e) => setTimeLimit(e.target.value)}
           placeholder="Enter your time limit"
         />
-
+        <input
+          type="number"
+          onChange={(e) => setSlots(e.target.value)}
+          placeholder="Enter number of slots"
+        />
         <input onChange={(e) => setConferencename(e.target.value)} />
         <button onClick={() => createConference()}>Create Conference</button>
       </h1>
@@ -73,22 +76,18 @@ export default function Home() {
       {availableRooms.map((room, idx) => (
         <div key={idx}>
           <li>
+            {room.slots} Slots in
             {room.room} &nbsp; &nbsp; --{" "}
             {room.people.map((person) => {
-              person.timeLeft < 0 && leaveRoom(room.room);
               return (
                 " -- " +
                 person.name +
                 " " +
                 "Time Left ==  " +
-                person.timeLeft / 10000 +
+                Number(person.timeLeft) +
                 "  Sec , "
               );
             })}
-            <input
-              onChange={(e) => setTimeLimit(e.target.value * 10000)}
-              placeholder="Enter your time limit"
-            />
             <button onClick={() => joinRoom(room.room)}>Join Room</button>
             <button onClick={() => leaveRoom(room.room)}>Leave Room</button>
           </li>
