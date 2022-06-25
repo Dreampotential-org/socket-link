@@ -6,7 +6,7 @@ COPY ${DIR_APP} /app
 
 
 
-FROM node:14.17 AS node-build
+FROM node:18.4 AS node-build
 
 WORKDIR /app
 
