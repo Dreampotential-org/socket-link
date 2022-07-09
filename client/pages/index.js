@@ -21,6 +21,9 @@ export default function Home() {
       setAliveUsers("Disconnected");
       setQueueUsers("Disconnected");
     });
+    socket.on("roomDetail", (data) => {
+      console.log("data::", data)
+    })
     socket.on("rooms", (data) => {
       data.forEach((room) => {
         room.people.forEach((person) => {

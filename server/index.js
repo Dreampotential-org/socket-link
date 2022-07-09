@@ -30,6 +30,7 @@ io.on("connection", (socket) => {
   //   queueUsers.push({ id: socket.id, socket, entryTime, exitTime });
   // }
   socket.on("saveName", (name) => {
+    console.log(name)
     socket.data = { name };
   });
   socket.on("disconnect", () => {
@@ -48,6 +49,7 @@ io.on("connection", (socket) => {
   socket.on("createConference", (data) => {
     // socket.data.entryTime = +new Date(Date.now());
     // socket.data.exitTime = +new Date(Date.now()) + data.timeLimit;
+    console.log(data)
     socket.data.entryTime = parseInt(new Date().getTime() / 1000);
     socket.data.exitTime =
       parseInt(new Date().getTime() / 1000) + Number(data.timeLimit);
@@ -68,6 +70,7 @@ io.on("connection", (socket) => {
       });
   });
   socket.on("joinRoom", async (data) => {
+    console.log(data)
     let roomLength = await io.in(data.room).fetchSockets();
     const availableRoom = availableRooms.filter(
       (room) => room.room === data.room
@@ -84,6 +87,7 @@ io.on("connection", (socket) => {
         queueUsers.push({ id: socket.id, socket });
     }
     console.log("Socket Data", socket);
+    io.sockets.emit("roomDetail", availableRoom[0]);
   });
 
   socket.on("leaveRoom", (room) => {
