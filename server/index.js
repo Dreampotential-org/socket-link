@@ -10,8 +10,8 @@ let queueUsers = [];
 let slots = 0;
 app.use(cors());
 app.use(express.json());
-const server = app.listen(4000, () => {
-  console.log("Server is up & running *4000");
+const server = app.listen(4001, () => {
+  console.log("Server is up & running *4001");
 });
 const io = new Server(server, {
   cors: {

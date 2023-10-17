@@ -11,7 +11,7 @@ services:
         container_name: cli
         restart: always
         ports:
-           - '80:3000'
+           - '4003:3000'
 #        links:
 #            - "server"
         depends_on:
@@ -23,7 +23,7 @@ services:
         container_name: server
         image: server_socket
         ports:
-            - '4000:4000'
+            - '4002:4001'
         build: 
             dockerfile: ./server/Dockerfile
             context: ./
